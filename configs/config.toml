@@ -1,0 +1,6 @@
+# example toml
+[folder_paths]
+nas_documents_path="/app/local-documents"
+local_documents_path="/app/local-documents"
+[client_side_configuration]
+api_port=13000

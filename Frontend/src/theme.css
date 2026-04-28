@@ -1,0 +1,26 @@
+/*
+  Global tweak file.
+  Keep all easy-to-tune sizes/ratios here as CSS variables.
+
+  Usage:
+  - Reference with var(--modal-max-width), var(--modal-padding), etc.
+  - Avoid hard-coded pixel values inside components when possible.
+*/
+
+:root {
+  /* Modal sizing */
+  --modal-max-width: 720px;
+  --modal-width: min(92vw, var(--modal-max-width));
+  --modal-padding: 1.25rem 1.25rem 1.5rem;
+
+  /* Create Remote form fields */
+  --form-field-height: 44px;
+  --form-field-padding-x: 0.9rem;
+  --form-field-font-size: 0.98rem;
+  --form-field-border-radius: 10px;
+  --form-field-label-gap: 0.4rem;
+
+  /* Remote Files (optional) */
+  --remote-tree-row-padding-y: 0.45rem;
+  --remote-tree-row-padding-x: 0.55rem;
+}

@@ -1,0 +1,49 @@
+:root[data-theme="dark-blue"] {
+  --ink-rgb: 226, 232, 240;
+  --paper-rgb: 19, 25, 38;
+  --overlay-rgb: 0, 0, 0;
+  --shadow-rgb: 0, 0, 0;
+
+  --color-pink: #5b8cff;
+  --color-pink-soft: #3a5a8f;
+  --color-yellow: #2a90d9;
+  --color-blue-soft: #0b111b;
+  --color-blue: #2f6fd4;
+
+  --color-blue-rgb: 47, 111, 212;
+  --accent-rgb: 91, 140, 255;
+  --accent-soft-rgb: 58, 90, 143;
+  --accent-2-rgb: 42, 144, 217;
+
+  --bg-primary: #0b111b;
+  --bg-secondary: #0f1b2b;
+
+  --surface-1: rgba(var(--paper-rgb), 0.98);
+  --surface-2: rgba(var(--paper-rgb), 0.92);
+  --surface-3: rgba(var(--paper-rgb), 0.84);
+  --surface-glass: rgba(var(--paper-rgb), 0.86);
+
+  --text-muted: #9aa9c2;
+  --nav-bg: #0f1b2b;
+  --nav-text: rgb(var(--ink-rgb));
+  --border-soft: rgba(var(--ink-rgb), 0.14);
+  --border-strong: rgba(var(--ink-rgb), 0.22);
+  --accent-strong: #3c75d9;
+
+  --warning-rgb: 115, 158, 210;
+  --warning-bg: rgba(var(--warning-rgb), 0.18);
+
+  --chat-user-bg: rgba(var(--accent-2-rgb), 0.18);
+
+  --selection-bg: rgba(var(--accent-rgb), 0.28);
+  --selection-text: rgb(var(--ink-rgb));
+
+  --shadow-soft: 0 20px 60px rgba(var(--shadow-rgb), 0.45);
+
+  --page-bg: radial-gradient(1200px 800px at 20% 10%, rgba(var(--color-blue-rgb), 0.18) 0%, rgba(var(--color-blue-rgb), 0.0) 55%),
+              radial-gradient(900px 650px at 80% 15%, rgba(var(--accent-2-rgb), 0.1) 0%, rgba(var(--accent-2-rgb), 0.0) 55%),
+              linear-gradient(180deg, var(--color-blue-soft) 0%, #0a1424 100%);
+  --login-bg: radial-gradient(1200px 800px at 25% 15%, rgba(var(--color-blue-rgb), 0.15) 0%, rgba(var(--color-blue-rgb), 0.0) 55%),
+              radial-gradient(900px 650px at 75% 25%, rgba(var(--accent-2-rgb), 0.08) 0%, rgba(var(--accent-2-rgb), 0.0) 55%),
+              linear-gradient(180deg, #0b111b 0%, #0a1424 60%, #09121f 100%);
+}

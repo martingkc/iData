@@ -5,7 +5,8 @@ load_dotenv()
 """
 TODO: before deployment change this to the FLASK config file. 
 """
-CONTEXT_SUMMARIZATION_MODEL = os.getenv("CONTEXT_SUMMARIZATION_MODEL", "gpt-4.1-mini")
+CONTEXT_SUMMARIZATION_MODEL = os.getenv("CONTEXT_SUMMARIZATION_MODEL", "gemma-4")
+LMSTUDIO_BASE_URL = os.getenv("LMSTUDIO_BASE_URL", "http://host.docker.internal:1234/v1")
 MONGODB_ADDRESS = os.getenv("MONGODB_ADDRESS")
 MONGODB_PORT = int(os.getenv("MONGODB_PORT"))
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME", "berkdorukmartin")

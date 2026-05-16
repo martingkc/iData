@@ -7,8 +7,12 @@ from langchain_core.messages import (
     HumanMessage,
     ToolMessage,
 )
-
-from ....config.config import POSTGRES_CHECKPOINT_URL, POSTGRES_USERDB_URL
+from ....config.config import (
+    POSTGRES_CHECKPOINT_URL,
+    POSTGRES_USERDB_URL,
+    LMSTUDIO_BASE_URL,
+    OPENAI_API_KEY,
+)
 from .prompts import system_prompt
 from .middleware import context_editing_mw, tool_limit_mw
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -18,10 +22,10 @@ from ...vector_db.milvus_connector import MilvusConnector
 from ....utils.logger import get_logger
 from .tools import (
     get_document_subagent,
+    get_calendar_subagent,
     get_sql_subagent,
-    get_coding_subagent,
-    think_tool,
     save_user_info,
+    think_tool,
     add_skill_tool,
     get_skill_tool,
     list_skills_tool,
@@ -41,7 +45,7 @@ logger = get_logger(__name__)
 
 class OrchestratorAgent:
 
-    def __init__(self, model: str = "gpt-5-mini", checkpointer = None):
+    def __init__(self, model: str = "gemma-4", checkpointer=None):
 
         self.skill_manager = get_skill_manager()
         self.store = (
@@ -52,12 +56,13 @@ class OrchestratorAgent:
 
         self.checkpointer = self.store.__enter__()
         self.checkpointer.setup()
+
+        subagents = []
         try:
             sql_subagent = get_sql_subagent()
-            subagents = [sql_subagent]
+            subagents.append(sql_subagent)
         except Exception as exc:
             logger.warning("SQL subagent unavailable: %s", exc)
-            subagents = []
 
         try:
             document_subagent = get_document_subagent()
@@ -66,10 +71,19 @@ class OrchestratorAgent:
             logger.warning("Document subagent unavailable: %s", exc)
 
         try:
+            calendar_subagent = get_calendar_subagent()
+            subagents.append(calendar_subagent)
+        except Exception as exc:
+            logger.warning("Calendar subagent unavailable: %s", exc)
+
+        logger.debug("%s", subagents)
+        """
+        try:
             coding_subagent = get_coding_subagent()
             subagents.append(coding_subagent)
         except Exception as exc:
             logger.warning("Coding subagent unavailable: %s", exc)
+        """
 
         self.tools = [
             think_tool,
@@ -81,12 +95,16 @@ class OrchestratorAgent:
             delete_skill_tool,
         ]
         self.agent = create_deep_agent(
-            model=ChatOpenAI(model=model, temperature=0),
+            model=ChatOpenAI(
+                model=model,
+                base_url=LMSTUDIO_BASE_URL,
+                api_key=OPENAI_API_KEY,
+                temperature=0,
+            ),
             tools=self.tools,
-            store= self.checkpointer,
+            store=self.checkpointer,
             system_prompt=self._build_system_prompt(),
             middleware=[context_editing_mw, tool_limit_mw],
-            # TODO change in memory saver with postgres saver
             checkpointer=self.checkpointer,
             context_schema=Context,
             subagents=subagents,

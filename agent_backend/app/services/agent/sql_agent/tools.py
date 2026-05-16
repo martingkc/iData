@@ -13,6 +13,7 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.tools import tool
 
 from ..skill_manager import get_schema_manager, get_sql_query_manager
+from ....config.config import LMSTUDIO_BASE_URL, OPENAI_API_KEY
 
 
 @tool(parse_docstring=True)
@@ -332,7 +333,7 @@ def create_llm(model_name: str) -> BaseLanguageModel:
 	expectation and keep temperature at zero for deterministic SQL generation.
 	"""
 
-	return ChatOpenAI(model=model_name, temperature=0)
+	return ChatOpenAI(model=model_name, base_url=LMSTUDIO_BASE_URL, api_key=OPENAI_API_KEY, temperature=0)
 
 
 def create_toolkit(db: SQLDatabase, llm: BaseLanguageModel) -> SQLDatabaseToolkit:

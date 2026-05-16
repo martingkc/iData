@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iData System Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #8b949e;
+    font-size: 0.85rem;
+    margin-bottom: 40px;
+  }
+
+  /* ── TAB BAR ──────────────────────────────────── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .tab {
+    padding: 8px 22px;
+    border-radius: 20px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #8b949e;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { border-color: #58a6ff; color: #58a6ff; }
+  .tab.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── SHARED CARD ──────────────────────────────── */
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .card-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── ARROWS ───────────────────────────────────── */
+  .arrow-down {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 6px 0;
+    gap: 2px;
+  }
+
+  .arrow-down .line {
+    width: 2px;
+    height: 20px;
+    background: #30363d;
+  }
+
+  .arrow-down .head {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #30363d;
+  }
+
+  .arrow-label {
+    font-size: 0.68rem;
+    color: #6e7681;
+    background: #0d1117;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── VIEW 1: AGENT FLOW ───────────────────────── */
+  #view-agent .lane-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 2px 1fr 2px 1fr;
+    gap: 0 16px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .lane-divider {
+    background: #21262d;
+    border-radius: 2px;
+    margin-top: 40px;
+  }
+
+  .lane-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 6px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .node {
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+    border: 1px solid transparent;
+    position: relative;
+  }
+
+  .node-title {
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .node-sub {
+    font-size: 0.68rem;
+    opacity: 0.65;
+    line-height: 1.4;
+  }
+
+  .node-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 5px;
+    font-weight: 600;
+  }
+
+  /* colour themes */
+  .blue  { background:#0d2840; border-color:#1f6feb; }
+  .blue .dot, .blue .node-tag  { background:#1f6feb; }
+  .blue .lane-header            { background:#0d2840; color:#58a6ff; border:1px solid #1f6feb; }
+
+  .green { background:#0d2818; border-color:#2ea043; }
+  .green .dot, .green .node-tag { background:#2ea043; }
+  .green .lane-header           { background:#0d2818; color:#3fb950; border:1px solid #2ea043; }
+
+  .purple{ background:#1a0d33; border-color:#8957e5; }
+  .purple .dot,.purple .node-tag{ background:#8957e5; }
+  .purple .lane-header          { background:#1a0d33; color:#a371f7; border:1px solid #8957e5; }
+
+  .orange{ background:#2b1700; border-color:#d97706; }
+  .orange .dot,.orange .node-tag{ background:#d97706; }
+
+  .red   { background:#2b0d0d; border-color:#f85149; }
+  .red .dot, .red .node-tag     { background:#f85149; }
+
+  .teal  { background:#0d2826; border-color:#1abc9c; }
+  .teal .dot, .teal .node-tag   { background:#1abc9c; }
+
+  /* ── VIEW 2: CHUNKING PIPELINE ────────────────── */
+  #view-chunking .pipeline {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+
+  .step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-body {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #30363d;
+  }
+
+  .step-body.hl-blue   { border-color:#1f6feb; background:#0d2840; }
+  .step-body.hl-green  { border-color:#2ea043; background:#0d2818; }
+  .step-body.hl-purple { border-color:#8957e5; background:#1a0d33; }
+  .step-body.hl-orange { border-color:#d97706; background:#2b1700; }
+  .step-body.hl-teal   { border-color:#1abc9c; background:#0d2826; }
+  .step-body.hl-red    { border-color:#f85149; background:#2b0d0d; }
+
+  .step-body h3 { font-size:0.8rem; font-weight:600; margin-bottom:4px; }
+  .step-body p  { font-size:0.72rem; color:#8b949e; line-height:1.5; }
+
+  .step-body ul {
+    margin-top:6px; padding-left:14px;
+    font-size:0.7rem; color:#8b949e; line-height:1.7;
+  }
+
+  .badge {
+    display:inline-block; font-size:0.6rem; font-weight:600;
+    padding:1px 6px; border-radius:4px; margin-right:4px; margin-top:4px;
+  }
+
+  .b-blue   { background:#1f6feb22; color:#58a6ff; border:1px solid #1f6feb55; }
+  .b-green  { background:#2ea04322; color:#3fb950; border:1px solid #2ea04355; }
+  .b-purple { background:#8957e522; color:#a371f7; border:1px solid #8957e555; }
+  .b-orange { background:#d9770622; color:#f0883e; border:1px solid #d9770655; }
+  .b-teal   { background:#1abc9c22; color:#1abc9c; border:1px solid #1abc9c55; }
+  .b-red    { background:#f8514922; color:#ff7b72; border:1px solid #f8514955; }
+  .b-gray   { background:#21262d;   color:#8b949e; border:1px solid #30363d; }
+
+  /* ── VIEW 3: RETRIEVAL FLOW ───────────────────── */
+  #view-retrieval .ret-flow {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .ret-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .ret-box {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #30363d;
+    font-size: 0.75rem;
+  }
+
+  .ret-box h4 { font-weight:600; margin-bottom:4px; font-size:0.78rem; }
+  .ret-box p  { color:#8b949e; font-size:0.7rem; line-height:1.45; }
+
+  .connector-h {
+    display:flex; align-items:center; justify-content:center;
+    color:#444d56; font-size:1.1rem; padding:0 2px;
+    flex-shrink:0;
+  }
+
+  /* ── LEGEND ───────────────────────────────────── */
+  .legend {
+    display:flex; flex-wrap:wrap; gap:10px;
+    justify-content:center; margin-top:28px;
+  }
+
+  .legend-item {
+    display:flex; align-items:center; gap:6px;
+    font-size:0.68rem; color:#8b949e;
+  }
+
+  .legend-dot { width:10px; height:10px; border-radius:50%; }
+</style>
+</head>
+<body>
+
+<h1>iData System Architecture</h1>
+<p class="subtitle">Agent Orchestration · Document Chunking Pipeline · Retrieval Flow</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('agent')">Agent System</div>
+  <div class="tab" onclick="switchTab('chunking')">Chunking Pipeline</div>
+  <div class="tab" onclick="switchTab('retrieval')">Retrieval Flow</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     VIEW 1 — AGENT SYSTEM
+     ══════════════════════════════════════════════════════ -->
+<div id="view-agent" class="view active">
+
+  <!-- Top: User → API -->
+  <div style="max-width:960px;margin:0 auto 0;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;margin:0 auto 6px;">
+      <div class="node blue">
+        <div class="node-title">Frontend (React)</div>
+        <div class="node-sub">Chat interface · File upload · Settings</div>
+      </div>
+      <div class="node blue">
+        <div class="node-title">Flask Chat API</div>
+        <div class="node-sub">POST /chats/:id/messages<br>Auth · Context injection</div>
+        <span class="node-tag" style="color:#fff;">Port 5001</span>
+      </div>
+    </div>
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+  </div>
+
+  <!-- Middle: Orchestrator -->
+  <div style="max-width:960px;margin:0 auto;">
+    <div style="max-width:560px;margin:0 auto 6px;">
+      <div class="node purple" style="text-align:center;">
+        <div class="node-title" style="font-size:0.85rem;">OrchestratorAgent</div>
+        <div class="node-sub">LangGraph StateGraph · deepagents<br>PostgreSQL checkpointer (thread_id) · Middleware pipeline</div>
+        <span class="node-tag" style="color:#fff;">Singleton · Context-aware</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:60px;margin-bottom:6px;">
+      <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+      <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+      <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+    </div>
+  </div>
+
+  <!-- Three agents -->
+  <div style="max-width:960px;margin:0 auto;">
+    <div class="lane-wrapper">
+
+      <!-- RESEARCH AGENT -->
+      <div>
+        <div class="lane-header blue">Research Agent</div>
+
+        <div class="node blue">
+          <div class="node-title">document_catalogue_search</div>
+          <div class="node-sub">Hybrid BM25 + dense search over doc summaries. Returns document IDs.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node blue">
+          <div class="node-title">chunk_retriever_tool</div>
+          <div class="node-sub">Vector search with filter_expr. Weighted 0.7 semantic + 0.3 lexical.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node blue">
+          <div class="node-title">retrieve_full_content</div>
+          <div class="node-sub">Load complete parsed document from MongoDB when chunks insufficient.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node teal">
+          <div class="node-title">Milvus Vector DB</div>
+          <div class="node-sub">document_chunks collection<br>FLAT index · COSINE metric<br>FlashRank BERT reranker</div>
+        </div>
+      </div>
+
+      <div class="lane-divider"></div>
+
+      <!-- SQL AGENT -->
+      <div>
+        <div class="lane-header green">SQL Agent</div>
+
+        <div class="node green">
+          <div class="node-title">execute_query</div>
+          <div class="node-sub">Run SQL via SQLAlchemy. Review middleware enforces safety.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node green">
+          <div class="node-title">schema_directory_tools</div>
+          <div class="node-sub">Table docs CRUD. LRU-cached via MongoDB. Injected into system prompt.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node green">
+          <div class="node-title">saved_query_tools</div>
+          <div class="node-sub">Query snippets stored in MongoDB. Reused across sessions.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node green" style="border-color:#3fb950;">
+          <div class="node-title">SQL Database</div>
+          <div class="node-sub">SQLite / connected relational DB<br>Schema auto-discovered at init</div>
+        </div>
+      </div>
+
+      <div class="lane-divider"></div>
+
+      <!-- CODING AGENT -->
+      <div>
+        <div class="lane-header purple">Coding Agent</div>
+
+        <div class="node purple">
+          <div class="node-title">JupyterHub MCP Tools</div>
+          <div class="node-sub">Execute code cells, manage notebooks via MCP server.</div>
+        </div>
+        <div class="arrow-down"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node purple">
+          <div class="node-title">coding_skill_tools</div>
+          <div class="node-sub">CRUD for reusable code snippets. MongoDB-backed LRU cache.</div>
+        </div>
+        <div class="arrow-down" style="margin-top:52px;"><div class="line" style="height:10px"></div><div class="head"></div></div>
+        <div class="node purple" style="border-color:#a371f7;">
+          <div class="node-title">JupyterHub</div>
+          <div class="node-sub">Live Python kernel<br>Code execution environment</div>
+        </div>
+      </div>
+
+    </div><!-- end lane-wrapper -->
+
+    <!-- Shared skill store -->
+    <div class="arrow-down" style="margin-top:16px;"><div class="line"></div><div class="head"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px;margin:6px auto 0;">
+      <div class="node orange">
+        <div class="node-title">SkillManager (MongoDB)</div>
+        <div class="node-sub">LRU cache per agent · agent_skills, sql_agent_schemas, coding_agent_skills<br>Max 20 in prompt · 10 stored total</div>
+      </div>
+      <div class="node orange">
+        <div class="node-title">PostgreSQL</div>
+        <div class="node-sub">Chats & messages store<br>LangGraph checkpointer (multi-turn state)<br>Keyed by thread_id</div>
+      </div>
+    </div>
+
+  </div><!-- end max-width wrapper -->
+
+  <!-- Middleware callout -->
+  <div style="max-width:500px;margin:24px auto 0;">
+    <div class="card">
+      <div class="card-title" style="color:#f0883e;"><span class="dot" style="background:#d97706"></span>Middleware Pipeline (per run)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="badge b-orange">ContextEditingMiddleware</span>
+        <span class="badge b-gray">Clears tool uses at token threshold</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+        <span class="badge b-orange">ToolCallLimitMiddleware</span>
+        <span class="badge b-gray">Max 20/thread · 10/run</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end view-agent -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     VIEW 2 — CHUNKING PIPELINE
+     ══════════════════════════════════════════════════════ -->
+<div id="view-chunking" class="view">
+  <div class="pipeline">
+
+    <div class="step">
+      <div class="step-num" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb55;">1</div>
+      <div class="step-body hl-blue">
+        <h3>File Upload → MongoDB</h3>
+        <p>User uploads PDF via frontend. Raw file stored in MongoDB <strong>UNSTRUCTURED_COLLECTION</strong> with metadata (local_path, remote_path, created timestamp). Status: <code>parsed=false</code>.</p>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><span class="arrow-label">every 60 s</span><div class="head"></div></div>
+
+    <div class="step">
+      <div class="step-num" style="background:#2ea04322;color:#3fb950;border:1px solid #2ea04355;">2</div>
+      <div class="step-body hl-green">
+        <h3>file_parser_thread</h3>
+        <p>Background thread polls MongoDB via <strong>FileFetcher</strong>. Picks up documents where <code>parsed=false</code> OR <code>updated=true</code>. Runs continuously; one document at a time.</p>
+        <div style="margin-top:6px;">
+          <span class="badge b-green">async thread</span>
+          <span class="badge b-gray">document_parser_backend · Port 5000</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+
+    <div class="step">
+      <div class="step-num" style="background:#8957e522;color:#a371f7;border:1px solid #8957e555;">3</div>
+      <div class="step-body hl-purple">
+        <h3>DocumentParser.parse_to_md()</h3>
+        <p>Converts PDF to Markdown using <strong>Docling</strong>.</p>
+        <ul>
+          <li>Extracts inline images → OCR text merged with surrounding content</li>
+          <li>Detects and removes repeating headers / footers (heuristic)</li>
+          <li>Returns <code>(parsed_markdown, dl_doc)</code> — dl_doc keeps structure for chunking</li>
+        </ul>
+        <div style="margin-top:6px;">
+          <span class="badge b-purple">Docling PDF pipeline</span>
+          <span class="badge b-purple">OCR enabled</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+
+    <div class="step">
+      <div class="step-num" style="background:#d9770622;color:#f0883e;border:1px solid #d9770655;">4</div>
+      <div class="step-body hl-orange">
+        <h3>build_doc_context_llm()</h3>
+        <p>Sends first ≤3 000 chars of Markdown to an LLM. Returns a <strong>single-sentence summary</strong> (≤300 chars) describing the document's content. This context is:</p>
+        <ul>
+          <li>Prepended to every chunk's <code>bm25_text</code> to improve keyword matching</li>
+          <li>Stored separately in the document catalogue for discovery-phase search</li>
+        </ul>
+        <span class="badge b-orange">LLM summarisation</span>
+        <span class="badge b-gray">max 300 chars output</span>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+
+    <div class="step">
+      <div class="step-num" style="background:#1abc9c22;color:#1abc9c;border:1px solid #1abc9c55;">5</div>
+      <div class="step-body hl-teal">
+        <h3>hierarchical_chunking(dl_doc)</h3>
+        <p>Uses <strong>docling_core HybridChunker</strong> — respects headings, lists, and table boundaries.</p>
+        <ul>
+          <li><strong>max_tokens:</strong> 512 &nbsp;·&nbsp; <strong>min_tokens:</strong> 80</li>
+          <li><strong>Text chunks</strong> — paragraph/section content</li>
+          <li><strong>Table chunks</strong> — table text kept in BM25 field only, stripped from dense embedding to avoid noise</li>
+          <li>Each chunk gets: <code>document_id, chunk_index, chunk_type, bm25_text, original_text, context, pages, image_ids</code></li>
+        </ul>
+        <div style="margin-top:6px;">
+          <span class="badge b-teal">HybridChunker</span>
+          <span class="badge b-teal">structure-aware</span>
+          <span class="badge b-gray">LangChain Document objects</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+
+    <!-- Two parallel outputs -->
+    <div style="display:grid;grid-template-columns:1fr 12px 1fr;gap:0 8px;">
+
+      <div class="step" style="margin-bottom:0">
+        <div class="step-num" style="background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb55;">6a</div>
+        <div class="step-body hl-blue">
+          <h3>MilvusConnector.add_documents()</h3>
+          <p>Bulk-inserts chunks into <strong>document_chunks</strong> collection.</p>
+          <ul>
+            <li>Dense vector: text-embedding-3-small → FLAT/COSINE</li>
+            <li>Sparse vector: built-in BM25 function on <code>bm25_text</code></li>
+          </ul>
+          <span class="badge b-blue">Milvus</span>
+          <span class="badge b-blue">dense + sparse</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:center;color:#444d56;font-size:1.4rem;">⇄</div>
+
+      <div class="step" style="margin-bottom:0">
+        <div class="step-num" style="background:#2ea04322;color:#3fb950;border:1px solid #2ea04355;">6b</div>
+        <div class="step-body hl-green">
+          <h3>DocumentCatalogueConnector.add_document()</h3>
+          <p>Inserts one entry per document into <strong>document_catalogue</strong> collection using the 1-sentence summary as its searchable content.</p>
+          <span class="badge b-green">Milvus catalogue</span>
+          <span class="badge b-gray">discovery layer</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><div class="head"></div></div>
+
+    <div class="step">
+      <div class="step-num" style="background:#f8514922;color:#ff7b72;border:1px solid #f8514955;">7</div>
+      <div class="step-body hl-red">
+        <h3>MongoDB Update + GC</h3>
+        <p>Updates the document record with <code>parsed_markdown</code>, <code>milvus_ids[]</code>, asset references, and sets <code>parsed=true</code>. Large objects explicitly deleted; <code>gc.collect()</code> called to free memory.</p>
+        <span class="badge b-red">parsed=true</span>
+        <span class="badge b-gray">milvus_ids stored</span>
+        <span class="badge b-gray">gc.collect()</span>
+      </div>
+    </div>
+
+  </div><!-- end pipeline -->
+</div><!-- end view-chunking -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     VIEW 3 — RETRIEVAL FLOW
+     ══════════════════════════════════════════════════════ -->
+<div id="view-retrieval" class="view">
+  <div class="ret-flow">
+
+    <div style="text-align:center;margin-bottom:20px;font-size:0.8rem;color:#8b949e;">
+      How the ResearchAgent retrieves evidence for a user query
+    </div>
+
+    <!-- Step 1 -->
+    <div class="ret-row">
+      <div class="ret-box" style="border-color:#1f6feb;background:#0d2840;text-align:center;">
+        <h4 style="color:#58a6ff;">User Query</h4>
+        <p>"What does the Q3 revenue report say about APAC?"</p>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><span class="arrow-label">Stage 1 — discovery</span><div class="head"></div></div>
+
+    <!-- Step 2 -->
+    <div class="ret-row">
+      <div class="ret-box" style="border-color:#8957e5;background:#1a0d33;">
+        <h4 style="color:#a371f7;">document_catalogue_search_tool</h4>
+        <p>Hybrid search over document-level summaries in Milvus <strong>document_catalogue</strong>. Returns top-k document IDs + paths. Identifies which documents are likely relevant before loading any chunks.</p>
+        <div style="margin-top:6px;">
+          <span class="badge b-purple">BM25 + dense</span>
+          <span class="badge b-gray">k=5 default</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><span class="arrow-label">Stage 2 — chunk retrieval</span><div class="head"></div></div>
+
+    <!-- Step 3 -->
+    <div class="ret-row">
+      <div class="ret-box" style="border-color:#1abc9c;background:#0d2826;">
+        <h4 style="color:#1abc9c;">chunk_retriever_tool</h4>
+        <p>Searches <strong>document_chunks</strong> in Milvus with an optional <code>filter_expr</code> to scope to discovered document IDs.</p>
+        <ul style="margin-top:6px;padding-left:16px;font-size:0.7rem;color:#8b949e;line-height:1.8;">
+          <li>Dense score weight: <strong>0.7</strong></li>
+          <li>Sparse (BM25) weight: <strong>0.3</strong></li>
+          <li>FlashRank BERT reranker applied after retrieval</li>
+          <li>Example filter: <code>document_id == "abc123"</code></li>
+          <li>Supports page range, chunk type, path filters</li>
+        </ul>
+        <div style="margin-top:6px;">
+          <span class="badge b-teal">k=10 default</span>
+          <span class="badge b-teal">reranked</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><span class="arrow-label">if chunks insufficient</span><div class="head"></div></div>
+
+    <!-- Step 4 (optional) -->
+    <div class="ret-row">
+      <div class="ret-box" style="border-color:#d97706;background:#2b1700;">
+        <h4 style="color:#f0883e;">retrieve_full_content_tool <span style="font-size:0.65rem;font-weight:400;color:#8b949e;">(optional fallback)</span></h4>
+        <p>Loads the complete parsed Markdown for a document directly from MongoDB when chunk results are insufficient. Used for deep-dive questions that span the whole document.</p>
+        <span class="badge b-orange">MongoDB</span>
+        <span class="badge b-gray">full parsed_markdown</span>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="line"></div><span class="arrow-label">synthesis</span><div class="head"></div></div>
+
+    <!-- Step 5 -->
+    <div class="ret-row">
+      <div class="ret-box" style="border-color:#1f6feb;background:#0d2840;text-align:center;">
+        <h4 style="color:#58a6ff;">OrchestratorAgent → Response with Citations</h4>
+        <p>Synthesises retrieved chunks + full content into a final answer. Source references include document_id + chunk_index for traceability.</p>
+      </div>
+    </div>
+
+    <!-- Filter examples -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title" style="color:#f0883e;"><span class="dot" style="background:#d97706"></span>Example Milvus Filter Expressions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.71rem;">
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 10px;">
+          <div style="color:#8b949e;margin-bottom:3px;">Filter by document</div>
+          <code style="color:#79c0ff;">document_id == "507f1f77bcf86cd799439011"</code>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 10px;">
+          <div style="color:#8b949e;margin-bottom:3px;">Filter tables only</div>
+          <code style="color:#79c0ff;">chunk_type == "table"</code>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 10px;">
+          <div style="color:#8b949e;margin-bottom:3px;">Filter by page range</div>
+          <code style="color:#79c0ff;">pages[0] &gt;= 5 and pages[0] &lt;= 20</code>
+        </div>
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:8px 10px;">
+          <div style="color:#8b949e;margin-bottom:3px;">Filter by path</div>
+          <code style="color:#79c0ff;">local_path like "%Revenue%"</code>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end ret-flow -->
+</div><!-- end view-retrieval -->
+
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1f6feb"></div>User / API / Research</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8957e5"></div>Orchestrator / Catalogue</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2ea043"></div>SQL Agent / Parsed</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>Skills / Storage / Fallback</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1abc9c"></div>Vector DB / Chunker</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f85149"></div>Finalisation / GC</div>
+</div>
+
+<script>
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['agent','chunking','retrieval'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.id === 'view-' + name);
+    });
+  }
+</script>
+
+</body>
+</html>

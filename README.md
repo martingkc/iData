@@ -1,6 +1,50 @@
 # iData
 
-iData is a self-hosted enterprise document intelligence platform. Drop files into a watched folder or sync them from cloud storage, and the system automatically ingests, parses, chunks, and indexes them. A multi-agent RAG backend then answers natural-language questions about your documents with inline citations, SQL data lookups, and interactive graph generation — all through a React web interface.
+iData is a self-hosted enterprise document intelligence platform. Drop files into a watched folder or sync them from cloud storage, and the system automatically ingests, parses, chunks, and indexes them. A multi-agent RAG backend then answers natural-language questions about your documents with inline citations, SQL data lookups, and interactive graph generation — all through a React web interface. Tested locally using `qwen/qwen3.6-35b-a3b`.
+
+---
+
+## Screenshots
+
+### Chat interface
+
+![Chat interface](readme_assets/basic_UI.png)
+
+### Workspace picker — select which documents or folders the agent can search
+
+![Workspace picker](readme_assets/pick_which_documentsorfolders_you_want_to_work_on.png)
+
+### Multi-source query — cross-referencing Champions League fixtures with Manchester cultural events to plan a trip
+
+![Multi-source query](readme_assets/multidoc_analysis.png)
+
+### Adding the planned trip to Google Calendar from the chat
+
+![Create calendar event](readme_assets/create_calendar_event.png)
+
+### Retrieving a past calendar event in a new conversation
+
+![Calendar retrieval](readme_assets/retreival_from_calendar.png)
+
+### SQL agent — querying structured data and rendering results as an interactive chart
+
+![SQL agent plot](readme_assets/sql_agent_plot.png)
+
+### Spotlight search — semantic search across all parsed documents
+
+![Semantic search](readme_assets/semantic_search_over_parsed_docs.png)
+
+### Remote Files — browse and select files to sync from a cloud remote
+
+![Pick remote files](readme_assets/pick_which_remote_files_to_sync.png)
+
+### Remote Files — add a new rclone remote (headless OAuth flow)
+
+![Add remote](readme_assets/sync_from_multiple_remote_sources.png)
+
+### Sign up / sign in
+
+![Sign in](readme_assets/sign_in.png)
 
 ---
 

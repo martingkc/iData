@@ -38,6 +38,8 @@ flatbuffers==25.9.23
 frozenlist==1.8.0
 fsspec==2025.10.0
 google-auth==2.43.0
+google-auth-oauthlib==1.2.1
+google-api-python-client==2.169.0
 google-genai==1.55.0
 greenlet==3.3.0
 grpcio==1.76.0

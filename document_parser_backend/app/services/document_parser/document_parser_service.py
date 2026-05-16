@@ -18,7 +18,7 @@ from ..document_parser.utils.document_parser_utils import (
     clean_headers_footers,
     get_headers_and_footers,
 )
-from ...config.config import CONTEXT_SUMMARIZATION_MODEL
+from ...config.config import CONTEXT_SUMMARIZATION_MODEL, LMSTUDIO_BASE_URL, OPENAI_API_KEY
 from ...utils.logger import get_logger
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 
@@ -59,7 +59,7 @@ class DocumentParser:
             }
         )
 
-        self.summary_llm = ChatOpenAI(model=CONTEXT_SUMMARIZATION_MODEL)
+        self.summary_llm = ChatOpenAI( base_url=LMSTUDIO_BASE_URL, api_key=OPENAI_API_KEY)
 
         self.logger.info("DocumentParser correctly initialized")
 

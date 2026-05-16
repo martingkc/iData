@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 
 from langchain_openai import ChatOpenAI
 
-from ....config.config import POSTGRES_CHECKPOINT_URL, POSTGRES_USERDB_URL
+from ....config.config import POSTGRES_CHECKPOINT_URL, POSTGRES_USERDB_URL, LMSTUDIO_BASE_URL, OPENAI_API_KEY
 
 from .prompts import system_prompt_subagent, system_prompt_single_agent
 from .middleware import context_editing_mw, tool_limit_mw
@@ -39,7 +39,7 @@ logger = get_logger(__name__)
 class ResearchAgent:
 
     def __init__(
-        self, model: str = "gpt-5-mini", single_agent: bool = False, checkpointer=None
+        self, model: str = "gemma-4", single_agent: bool = False, checkpointer=None
     ):
         self.skill_manager = get_skill_manager()
         self.store = (
@@ -69,7 +69,7 @@ class ResearchAgent:
             ]
 
         
-        self.llm = ChatOpenAI(model=self.model, temperature=0)
+        self.llm = ChatOpenAI(model=self.model, base_url=LMSTUDIO_BASE_URL, api_key=OPENAI_API_KEY, temperature=0)
         self.agent = create_deep_agent(
             model=self.llm,
             tools=self.tools,

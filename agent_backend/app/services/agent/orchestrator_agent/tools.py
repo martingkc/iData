@@ -2,11 +2,11 @@
 from typing import Optional
 
 from ..skill_manager import get_skill_manager
-from ....config.config import SQL_AGENTDB_URI
+from ....config.runtime_settings import get_sql_agent_db_uri
 from ....utils.logger import get_logger
 from ..sql_agent.sql_agent import SQLAgent
 from ..research_agent.research_agent import ResearchAgent
-from ..coding_agent.coding_agent import CodingAgent
+from ..calendar_agent.calendar_agent import CalendarAgent
 from langchain.tools import ToolRuntime
 from langchain_core.tools import tool
 
@@ -19,7 +19,7 @@ import os
 logger = get_logger(__name__)
 _sql_agent: Optional[SQLAgent] = None
 _document_agent: Optional[ResearchAgent] = None
-_coding_agent: Optional[CodingAgent] = None
+_calendar_agent: Optional[CalendarAgent] = None
 
 
 @tool(parse_docstring=True)
@@ -51,6 +51,11 @@ def think_tool(reflection: str) -> str:
 
 
 
+def reset_sql_agent() -> None:
+    global _sql_agent
+    _sql_agent = None
+
+
 def _get_sql_agent() -> SQLAgent:
     """Lazy-initialize the SQL subagent using documented LangChain defaults."""
 
@@ -58,7 +63,7 @@ def _get_sql_agent() -> SQLAgent:
     if _sql_agent is not None:
         return _sql_agent
 
-    db_uri = SQL_AGENTDB_URI
+    db_uri = get_sql_agent_db_uri()
     if not db_uri:
         raise RuntimeError(
             "SQL_AGENT_DB_URI is not set. Provide a SQLAlchemy URI (e.g., postgres://... or sqlite:///file.db)."
@@ -124,26 +129,27 @@ def get_document_subagent(
     return agent.as_subagent(name=name, description=description)
 
 
-def _get_coding_agent() -> CodingAgent:
-    """Lazy-initialize the coding subagent."""
-
-    global _coding_agent
-    if _coding_agent is not None:
-        return _coding_agent
-
-    model_name = os.getenv("CODING_AGENT_MODEL", "gpt-5-mini")
-    _coding_agent = CodingAgent(model_name=model_name)
-    logger.info("Initialized Coding subagent with model=%s", model_name)
-    return _coding_agent
+def _get_calendar_agent() -> CalendarAgent:
+    """Lazy-initialize the Calendar subagent."""
+    global _calendar_agent
+    if _calendar_agent is not None:
+        return _calendar_agent
+    _calendar_agent = CalendarAgent()
+    logger.info("Initialized Calendar subagent")
+    return _calendar_agent
 
 
-def get_coding_subagent(
-    name: str = "coding-agent",
-    description: str = "Handles coding, debugging, refactoring, and implementation tasks",
+def get_calendar_subagent(
+    name: str = "calendar-agent",
+    description: str = (
+        "Manages Google Calendar events: list, create, update, and delete events. "
+        "Use for any scheduling, meeting management, or calendar-related requests."
+    ),
 ) -> dict:
-    """Return a deepagents-compatible subagent dict for coding tasks."""
-    agent = _get_coding_agent()
+    """Return a deepagents-compatible subagent dict for calendar tasks."""
+    agent = _get_calendar_agent()
     return agent.as_subagent(name=name, description=description)
+
 
 @tool(parse_docstring=True)
 def add_skill_tool(skill_name: str, short_description: str, skill_content: str) -> str:

@@ -7,6 +7,7 @@ from app.db import init_db
 from app.routes.chat_routes import chat_bp
 from app.routes.file_routes import file_bp
 from app.routes.auth_routes import auth_bp
+from app.routes.settings_routes import settings_bp
 
 def create_app():
     app = Flask(__name__)
@@ -15,6 +16,7 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(file_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(settings_bp)
     init_db()
     
     @app.teardown_appcontext

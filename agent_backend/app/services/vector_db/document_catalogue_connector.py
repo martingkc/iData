@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List, Tuple
 from langchain_community.document_compressors import FlashrankRerank
 from langchain_milvus import BM25BuiltInFunction, Milvus
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
+from .lm_studio_embeddings import LMStudioEmbeddings
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 
 from ...utils.logger import get_logger
@@ -48,7 +48,7 @@ class DocumentCatalogueConnector:
             return
             
         if embeddings is None:
-            embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+            embeddings = LMStudioEmbeddings()
             
         self._embeddings = embeddings
         self._collection_name = collection_name

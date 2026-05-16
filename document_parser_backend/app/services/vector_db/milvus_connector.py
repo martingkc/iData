@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List, Tuple, Union
 from langchain_community.document_compressors import FlashrankRerank
 from langchain_milvus import BM25BuiltInFunction, Milvus
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
+from .lm_studio_embeddings import LMStudioEmbeddings
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 from pymilvus import connections, Collection
 
@@ -27,7 +27,7 @@ class MilvusConnector:
 
     def __init__(
         self,
-        embeddings=OpenAIEmbeddings(model="text-embedding-3-small"),
+        embeddings=LMStudioEmbeddings(),
         uri: Optional[str] = None,
         collection_name: str = "document_chunks",
         builtin_function: BM25BuiltInFunction = BM25BuiltInFunction(

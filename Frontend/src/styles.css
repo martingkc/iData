@@ -4219,3 +4219,318 @@ body,
 .chat-message.assistant .markdown-content blockquote {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", Times, serif;
 }
+
+/* ---- Integration row (Settings → Integrations) ---- */
+.integration-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.integration-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.integration-badge {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: var(--border-subtle, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+}
+
+.integration-badge.connected {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.integration-badge.disconnected {
+  background: var(--border-subtle, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+}
+
+.integration-badge.unavailable {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.integration-action {
+  font-size: 0.82rem;
+  padding: 0.25rem 0.65rem;
+}
+
+/* ---- Calendar OAuth toast notification ---- */
+.calendar-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-lg, 8px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  animation: toast-in 0.25s ease;
+}
+
+.calendar-toast.connected {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+
+.calendar-toast.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---- Calendar event candidates section ---- */
+.calendar-candidates-section {
+  margin-top: 1.5rem;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-secondary, #f8fafc);
+  max-width: 640px;
+}
+
+.calendar-candidates-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  background: var(--surface-secondary, #f8fafc);
+  transition: background 0.15s;
+}
+
+.calendar-candidates-header:hover {
+  background: var(--surface-hover, #f1f5f9);
+}
+
+.calendar-candidates-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.calendar-candidates-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.calendar-candidates-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.calendar-candidates-chevron {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.calendar-candidates-body {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1.5px solid var(--border-color, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Transcript input area */
+.calendar-analyze-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.calendar-transcript-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--surface-primary, #fff);
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+.calendar-transcript-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.calendar-analyze-btn {
+  align-self: flex-end;
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.calendar-analyze-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.calendar-analyze-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+/* Empty state */
+.calendar-candidates-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Candidate cards list */
+.calendar-candidates-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.calendar-candidate-card {
+  padding: 0.75rem;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: var(--surface-primary, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.calendar-candidate-card.expired {
+  opacity: 0.72;
+  border-color: var(--text-muted, #94a3b8);
+}
+
+.candidate-card-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.candidate-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.candidate-expired-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.candidate-datetime {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.candidate-tz {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.candidate-detail {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #475569);
+}
+
+.candidate-description {
+  font-style: italic;
+}
+
+.candidate-excerpt {
+  margin: 0.2rem 0 0;
+  padding: 0.35rem 0.6rem;
+  border-left: 3px solid var(--accent-color, #3b82f6);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.candidate-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.candidate-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 7px;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.candidate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.candidate-btn.approve {
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+}
+
+.candidate-btn.approve:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.candidate-btn.reject {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+}
+
+.candidate-btn.reject:hover:not(:disabled) {
+  background: var(--surface-hover, #f1f5f9);
+  color: var(--text-primary);
+}

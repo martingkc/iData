@@ -30,8 +30,6 @@ const availableTools: ToolId[] = [
 
 const API_BASE = import.meta.env.VITE_AGENT_API_URL ?? "http://localhost:5001";
 
-const modelOptions = ["gpt-5-mini"]; // placeholder models
-
 const resolveInitialTheme = (): ThemeId => {
   if (typeof window === "undefined") {
     return "light";
@@ -58,7 +56,6 @@ const App = () => {
   const [activeChatId, setActiveChatId] = useState<string>("");
   const [selectedDocs, setSelectedDocs] = useState<SelectedDoc[]>([]);
   const [selectedTools, setSelectedTools] = useState<Set<ToolId>>(new Set(["retrieveDocuments"]));
-  const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
   const [streamingChatIds, setStreamingChatIds] = useState<Set<string>>(new Set());
   const [showSettings, setShowSettings] = useState(false);
   const [toolModalOpen, setToolModalOpen] = useState(false);
@@ -71,8 +68,23 @@ const App = () => {
   const [loadedMessages, setLoadedMessages] = useState<Set<string>>(new Set());
   const [activeSection, setActiveSection] = useState<"chat" | "remoteFiles" | "tasks">("chat");
   const [theme, setTheme] = useState<ThemeId>(resolveInitialTheme);
+  const [calendarToast, setCalendarToast] = useState<"connected" | "error" | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const chatWindowRef = useRef<ChatWindowRef>(null);
+
+  // Handle Google OAuth callback redirect params (?calendar_connected / ?calendar_error)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("calendar_connected")) {
+      setCalendarToast("connected");
+      window.history.replaceState({}, "", window.location.pathname);
+      setTimeout(() => setCalendarToast(null), 4000);
+    } else if (params.has("calendar_error")) {
+      setCalendarToast("error");
+      window.history.replaceState({}, "", window.location.pathname);
+      setTimeout(() => setCalendarToast(null), 5000);
+    }
+  }, []);
 
   // Check if user is already logged in (has valid cookie)
   useEffect(() => {
@@ -603,7 +615,6 @@ const App = () => {
           referencePrompt,
           selectedDocs,
           selectedTools,
-          selectedModel,
           deepThinkingEnabled
         ),
         timestamp: new Date().toISOString()
@@ -736,9 +747,6 @@ const App = () => {
             messages={activeChat?.messages ?? []}
             onSend={handleSend}
             isStreaming={isActiveChatStreaming}
-            modelOptions={modelOptions}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
             onCreateChat={handleCreateChat}
             onToggleDeepThinking={() => setDeepThinkingEnabled((prev) => !prev)}
             deepThinkingEnabled={deepThinkingEnabled}
@@ -758,7 +766,16 @@ const App = () => {
         onClose={() => setShowSettings(false)}
         theme={theme}
         onThemeChange={setTheme}
+        apiBase={API_BASE}
       />
+
+      {calendarToast && (
+        <div className={`calendar-toast ${calendarToast}`} role="status">
+          {calendarToast === "connected"
+            ? "Google Calendar connected successfully."
+            : "Google Calendar connection failed. Please try again."}
+        </div>
+      )}
 
       <FileManagerModal
         isOpen={fileManagerOpen}
@@ -823,14 +840,13 @@ const buildAssistantStub = (
   prompt: string,
   docs: SelectedDoc[],
   tools: Set<ToolId>,
-  model: string,
   deepThinking: boolean
 ) => {
   const docList = docs.map((doc) => doc.path);
   const toolList = [...tools];
 
   return [
-    `Model ${model} responding to: ${prompt}`,
+    `Responding to: ${prompt}`,
     docList.length
       ? `- Context: ${docList.join(", ")}`
       : "- Context: no documents selected",

@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List, Tuple
 from langchain_community.document_compressors import FlashrankRerank
 from langchain_milvus import BM25BuiltInFunction, Milvus
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
+from .lm_studio_embeddings import LMStudioEmbeddings
 from langchain_classic.retrievers.contextual_compression import ContextualCompressionRetriever
 
 from ...utils.logger import get_logger
@@ -30,7 +30,7 @@ class DocumentCatalogueConnector:
 
     def __init__(
         self,
-        embeddings=OpenAIEmbeddings(model="text-embedding-3-small"),
+        embeddings=LMStudioEmbeddings(),
         uri: Optional[str] = None,
         collection_name: str = "document_catalogue",
         host: Optional[str] = None,

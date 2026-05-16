@@ -1,8 +1,41 @@
-from flask import g, jsonify, request, make_response
+import json
+import time
+
+from flask import g, jsonify, request, make_response, redirect, current_app
+import jwt
+
 from .auth_extensions import basic_auth, token_auth
-from ...models.chat_models import User, UserType
+from ...models.chat_models import User, UserType, UserGoogleToken
 from ...db import SessionLocal
+from ...config.config import (
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI,
+    FRONTEND_URL,
+)
+
+from google_auth_oauthlib.flow import Flow
+
 from . import auth_bp
+
+_GOOGLE_CALENDAR_SCOPES = ["https://www.googleapis.com/auth/calendar"]
+
+
+def _build_google_flow(state: str | None = None):
+
+    client_config = {
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "redirect_uris": [GOOGLE_REDIRECT_URI],
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+        }
+    }
+    kwargs: dict = {"redirect_uri": GOOGLE_REDIRECT_URI}
+    if state:
+        kwargs["state"] = state
+    return Flow.from_client_config(client_config, scopes=_GOOGLE_CALENDAR_SCOPES, **kwargs)
 
 
 @auth_bp.route("/signup", methods=["POST"])
@@ -215,3 +248,121 @@ def get_user():
         }
     )
     return response
+
+
+# ---------------------------------------------------------------------------
+# Google Calendar OAuth endpoints
+# ---------------------------------------------------------------------------
+
+@auth_bp.route("/google/calendar", methods=["GET"])
+@token_auth.login_required
+def google_calendar_auth():
+    """Return the Google OAuth consent URL for the current user."""
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return jsonify({"error": "Google OAuth is not configured on this server."}), 503
+
+    # Encode user_id in a short-lived signed state token (CSRF protection).
+    state = jwt.encode(
+        {"user_id": str(g.user.id), "exp": time.time() + 600},
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256",
+    )
+    flow = _build_google_flow()
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        state=state,
+        prompt="consent",
+    )
+    return jsonify({"auth_url": auth_url})
+
+
+@auth_bp.route("/google/calendar/callback", methods=["GET"])
+def google_calendar_callback():
+    """Handle the redirect back from Google, exchange code for tokens, store them."""
+    error = request.args.get("error")
+    if error:
+        return redirect(f"{FRONTEND_URL}?calendar_error={error}")
+
+    state = request.args.get("state", "")
+    code = request.args.get("code", "")
+
+    # Verify state JWT and recover user_id.
+    try:
+        data = jwt.decode(state, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+        user_id = data["user_id"]
+    except Exception:
+        return redirect(f"{FRONTEND_URL}?calendar_error=invalid_state")
+
+    try:
+        flow = _build_google_flow(state=state)
+        # google-auth-oauthlib validates the state internally; pass the full URL.
+        flow.fetch_token(code=code)
+        creds = flow.credentials
+    except Exception as exc:
+        return redirect(f"{FRONTEND_URL}?calendar_error=token_exchange_failed")
+
+    token_data = {
+        "token": creds.token,
+        "refresh_token": creds.refresh_token,
+        "token_uri": creds.token_uri,
+        "client_id": creds.client_id,
+        "client_secret": creds.client_secret,
+        "scopes": list(creds.scopes or _GOOGLE_CALENDAR_SCOPES),
+    }
+
+    db = SessionLocal()
+    try:
+        existing = (
+            db.query(UserGoogleToken)
+            .filter_by(user_id=user_id, service="google_calendar")
+            .first()
+        )
+        if existing:
+            existing.token_json = json.dumps(token_data)
+            existing.updated_at = __import__("datetime").datetime.utcnow()
+        else:
+            db.add(
+                UserGoogleToken(
+                    user_id=user_id,
+                    service="google_calendar",
+                    token_json=json.dumps(token_data),
+                )
+            )
+        db.commit()
+    except Exception:
+        db.rollback()
+        return redirect(f"{FRONTEND_URL}?calendar_error=db_error")
+    finally:
+        db.close()
+
+    return redirect(f"{FRONTEND_URL}?calendar_connected=true")
+
+
+@auth_bp.route("/google/calendar/status", methods=["GET"])
+@token_auth.login_required
+def google_calendar_status():
+    """Return whether the current user has connected Google Calendar."""
+    db = g.db
+    token = (
+        db.query(UserGoogleToken)
+        .filter_by(user_id=g.user.id, service="google_calendar")
+        .first()
+    )
+    return jsonify({"connected": token is not None})
+
+
+@auth_bp.route("/google/calendar/disconnect", methods=["POST"])
+@token_auth.login_required
+def google_calendar_disconnect():
+    """Remove the stored Google Calendar token for the current user."""
+    db = g.db
+    token = (
+        db.query(UserGoogleToken)
+        .filter_by(user_id=g.user.id, service="google_calendar")
+        .first()
+    )
+    if token:
+        db.delete(token)
+        db.commit()
+    return jsonify({"message": "Google Calendar disconnected."})

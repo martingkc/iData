@@ -4,20 +4,18 @@ import threading
 import asyncio
 import gc
 
-from ..services.document_parser.document_parser_ocr_service import (
-    DocumentParserOCR,
-)
+
 from ..services.file_fetcher.file_fetcher import FileFetcher
 from ..services.document_parser.document_parser_service import DocumentParser
 from ..services.vector_db.milvus_connector import MilvusConnector
 from ..services.vector_db.document_catalogue_connector import DocumentCatalogueConnector
 from ..utils.logger import get_logger
-from langchain_openai import OpenAIEmbeddings
+from ..services.vector_db.lm_studio_embeddings import LMStudioEmbeddings
 
 logger = get_logger(__name__)
 
 
-async def file_parser_thread(app, VLM=True):
+async def file_parser_thread(app, VLM=False):
     """
     Thread that periodically fetches new documents from MongoDB, parses them, and saves to the vector db.
 
@@ -30,12 +28,9 @@ async def file_parser_thread(app, VLM=True):
     TODO: check step 6 of the pipeline. Evaluate that idea
     """
     try:
-        if VLM:
-            document_parser_service = DocumentParserOCR()
-        else: 
-            document_parser_service = DocumentParser()
+        document_parser_service = DocumentParser()
         file_fetcher_service = FileFetcher()
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        embeddings = LMStudioEmbeddings()
         milvus_connector_service = MilvusConnector(
             embeddings=embeddings,
             collection_name="document_chunks",

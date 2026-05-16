@@ -8,6 +8,7 @@ from .tools import (
 	prepare_sql_agent_components,
 	get_schema_directory_tools,
 	get_sql_query_directory_tools,
+	think_tool,
 )
 from ..skill_manager import get_schema_manager, get_sql_query_manager
 from ....utils.logger import get_logger
@@ -93,7 +94,8 @@ class SQLAgent:
 		
 		# Add schema and saved-query directory tools to the toolkit
 		self.tools = (
-			base_tools
+			[think_tool]
+			+ base_tools
 			+ get_schema_directory_tools()
 			+ get_sql_query_directory_tools()
 		)

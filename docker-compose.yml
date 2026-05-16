@@ -143,6 +143,10 @@ services:
       - JUPYTERHUB_API_TOKEN=7504d3b3244142a283bd7b5472c84a8c
       - JUPYTER_MCP_COMMAND=npx
       - UV_USE_IO_URING=0
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - FRONTEND_URL=${FRONTEND_URL}
 
     depends_on:
       - mongodb
@@ -230,25 +234,6 @@ services:
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     depends_on:
       - agent_backend
-    networks:
-      - idata-network
-
-  jupyterhub:
-    image: jupyterhub/jupyterhub:5
-    container_name: jupyterhub
-    env_file:
-      - .env
-    environment:
-      - JUPYTERHUB_ADMIN_USER=${JUPYTERHUB_ADMIN_USER:-admin}
-      - JUPYTERHUB_PASSWORD=${JUPYTERHUB_PASSWORD:-changeme}
-      - SCRAPING_ANT_API_KEY=139757d0fe794aeaac9be573d21e0992
-    command: jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
-    ports:
-      - "8002:8000"
-    volumes:
-      - ./jupyterhub/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
-      - jupyterhub_data:/srv/jupyterhub
-      - ./local-documents:/srv/shared/local-documents:ro
     networks:
       - idata-network
 

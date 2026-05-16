@@ -13,13 +13,6 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \ 
     && rm -rf /var/lib/apt/lists/*
 
-
-RUN apt-get update && apt-get install -y \
-    nodejs \
-    npm 
-RUN npm install -g mcp-remote 
-
-    
 # Copy requirements first for better caching
 COPY requirements.txt .
 

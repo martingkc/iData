@@ -11,7 +11,7 @@ from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesE
 context_editing_mw = ContextEditingMiddleware(
             edits=[
                 ClearToolUsesEdit(
-                    trigger=50000,
+                    trigger=10000,
                     keep=4,
                 ),
             ],

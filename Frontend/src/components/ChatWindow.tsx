@@ -13,9 +13,6 @@ interface ChatWindowProps {
   messages: ChatMessage[];
   onSend: (content: string) => void;
   isStreaming: boolean;
-  modelOptions: string[];
-  selectedModel: string;
-  onModelChange: (model: string) => void;
   onCreateChat: () => void;
   onOpenToolModal: () => void;
   onToggleDeepThinking: () => void;
@@ -115,9 +112,6 @@ const ChatWindow = forwardRef<ChatWindowRef, ChatWindowProps>(({
   messages,
   onSend,
   isStreaming,
-  modelOptions,
-  selectedModel,
-  onModelChange,
   onCreateChat,
   onOpenToolModal,
   onToggleDeepThinking,
@@ -127,7 +121,7 @@ const ChatWindow = forwardRef<ChatWindowRef, ChatWindowProps>(({
   docMenuOpen,
   onOpenFileManager,
   onOpenAddDocs,
-  onRetryMessage
+  onRetryMessage,
 }, ref) => {
   const formRef = useRef<HTMLFormElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
@@ -408,20 +402,6 @@ const ChatWindow = forwardRef<ChatWindowRef, ChatWindowProps>(({
                 </button>
               </div>
               <div className="chat-input-footer-right">
-                <div className="chat-input-model">
-                  <label htmlFor="model-select">Model</label>
-                  <select
-                    id="model-select"
-                    value={selectedModel}
-                    onChange={(event) => onModelChange(event.target.value)}
-                  >
-                    {modelOptions.map((model) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <button type="submit" className="send-button" disabled={isStreaming}>
                   {isStreaming ? "…" : <IconSend />}
                 </button>

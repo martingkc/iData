@@ -118,12 +118,11 @@ def rclone_sync_paths(
     listener: Callable[[Dict], None] | None = None,
     do_schedule_periodical_sync: bool = False,
 ) -> bool:
-    """Sync files from source to destination using rclone, a listener is used to log files
-    TODO : use listener to log progress in a more structured way"""
+    """Copy files from source to destination using rclone without deleting existing destination files."""
     try:
         source_path = f"{_get_remote_name_with_colon(remote_name)}{source_path}"
         # command = f"rclone sync {source_path} {destination_path}"
-        rclone.sync(
+        rclone.copy(
             src_path=source_path,
             dest_path=destination_path,
             listener=listener,

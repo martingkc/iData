@@ -223,7 +223,7 @@ services:
       - idata-network
 
   frontend:
-    build: ./Frontend
+    build: ./web_frontend
     container_name: idata-frontend
     ports:
       - "3000:3000"
